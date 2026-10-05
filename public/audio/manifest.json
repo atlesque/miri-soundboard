@@ -1,0 +1,47 @@
+[
+  {
+    "id": 1,
+    "src": "/audio/miri-01.mp3",
+    "duration": 0.62
+  },
+  {
+    "id": 2,
+    "src": "/audio/miri-02.mp3",
+    "duration": 0.63
+  },
+  {
+    "id": 3,
+    "src": "/audio/miri-03.mp3",
+    "duration": 0.47
+  },
+  {
+    "id": 4,
+    "src": "/audio/miri-04.mp3",
+    "duration": 0.53
+  },
+  {
+    "id": 5,
+    "src": "/audio/miri-05.mp3",
+    "duration": 0.58
+  },
+  {
+    "id": 6,
+    "src": "/audio/miri-06.mp3",
+    "duration": 0.41
+  },
+  {
+    "id": 7,
+    "src": "/audio/miri-07.mp3",
+    "duration": 0.75
+  },
+  {
+    "id": 8,
+    "src": "/audio/miri-08.mp3",
+    "duration": 0.58
+  },
+  {
+    "id": 9,
+    "src": "/audio/miri-09.mp3",
+    "duration": 0.3
+  }
+]

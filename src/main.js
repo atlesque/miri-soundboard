@@ -9,6 +9,11 @@ let volume = .75;
 let theme;
 try { theme = localStorage.getItem('miri-theme') || 'system'; } catch { theme = 'system'; }
 const systemTheme = matchMedia('(prefers-color-scheme: dark)');
+const themeSwitch = $('.theme-switch');
+const themeThumb = $('.switch-thumb');
+const themeButtons = [...themeSwitch.querySelectorAll('button[data-theme]')];
+let themeDrag = null;
+let suppressThemeClick = false;
 function applyTheme() {
   $('.theme-switch').dataset.position = theme;
   document.documentElement.dataset.theme = theme === 'system' ? (systemTheme.matches ? 'dark' : 'light') : theme;
@@ -16,11 +21,65 @@ function applyTheme() {
     if (button.tagName === 'BUTTON') button.setAttribute('aria-pressed', String(button.dataset.theme === theme));
   });
 }
-document.querySelectorAll('button[data-theme]').forEach(button => button.addEventListener('click', () => {
-  theme = button.dataset.theme;
+function selectTheme(value) {
+  theme = value;
   try { localStorage.setItem('miri-theme', theme); } catch {}
   applyTheme();
-}));
+}
+themeButtons.forEach(button => button.addEventListener('click', () => selectTheme(button.dataset.theme)));
+// A drag also generates a click; don't let it select the button where it began.
+themeSwitch.addEventListener('click', event => {
+  if (suppressThemeClick && event.detail > 0) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    suppressThemeClick = false;
+  }
+}, true);
+themeSwitch.addEventListener('pointerdown', event => {
+  if (!event.isPrimary || event.button !== 0 || themeDrag) return;
+  suppressThemeClick = false;
+  themeDrag = {
+    pointerId: event.pointerId,
+    startX: event.clientX,
+    startPosition: themeButtons.findIndex(button => button.dataset.theme === theme),
+    step: themeButtons[1].getBoundingClientRect().left - themeButtons[0].getBoundingClientRect().left,
+    moved: false,
+  };
+});
+function moveThemeThumb(event) {
+  if (!themeDrag || event.pointerId !== themeDrag.pointerId) return;
+  const delta = event.clientX - themeDrag.startX;
+  if (!themeDrag.moved && Math.abs(delta) < 4) return;
+  if (!themeDrag.moved) {
+    themeDrag.moved = true;
+    themeSwitch.setPointerCapture(event.pointerId);
+    themeSwitch.classList.add('dragging');
+  }
+  themeDrag.position = Math.max(0, Math.min(2, themeDrag.startPosition + delta / themeDrag.step));
+  themeThumb.style.transform = `translateX(${themeDrag.position * 100}%)`;
+}
+themeSwitch.addEventListener('pointermove', moveThemeThumb);
+function finishThemeDrag(event) {
+  if (!themeDrag || event.pointerId !== themeDrag.pointerId) return;
+  const drag = themeDrag;
+  const cancelled = event.type !== 'pointerup';
+  if (!cancelled) moveThemeThumb(event);
+  themeDrag = null;
+  themeSwitch.classList.remove('dragging');
+  themeThumb.style.removeProperty('transform');
+  if (drag.moved) {
+    suppressThemeClick = true;
+    if (!cancelled) {
+      const button = themeButtons[Math.round(drag.position)];
+      selectTheme(button.dataset.theme);
+      button.focus({ preventScroll: true });
+    }
+  }
+  if (themeSwitch.hasPointerCapture(event.pointerId)) themeSwitch.releasePointerCapture(event.pointerId);
+}
+window.addEventListener('pointerup', finishThemeDrag);
+window.addEventListener('pointercancel', finishThemeDrag);
+themeSwitch.addEventListener('lostpointercapture', finishThemeDrag);
 systemTheme.addEventListener('change', applyTheme);
 applyTheme();
 // Shared portrait: Miri's warm brown tabby coat, tall ears, round eyes and cream muzzle.

@@ -29,19 +29,21 @@ Selection was assisted by local YAMNet/CLAP classification, spectrogram inspecti
 
 This app needs no server, database, Functions, or paid API. Fonts and audio are served by the website itself.
 
-Connect this repository to a Cloudflare Pages project:
+The GitHub repository [atlesque/miri-soundboard](https://github.com/atlesque/miri-soundboard) is connected through Cloudflare Pages' native Git integration. Every push to `main` automatically builds and publishes production; other branches receive preview deployments.
 
-- Framework preset: Vite (or None)
+- Project: `miri-soundboard`
+- Production URL: https://miri.atlesque.dev
+- Pages URL: https://miri-soundboard.pages.dev
 - Build command: `npm run build`
 - Build output directory: `dist`
 - Production branch: `main`
-- Node.js: 24
+- Node.js: 24 (selected by `.node-version`)
 
 The `public/_headers` file is copied to `dist/` and applies security and audio caching headers on Pages.
 
-Intended custom domain: **miri.atlesque.dev**. After deployment, add it in the Pages project's **Custom domains** tab first, then create the required CNAME pointing `miri` to the actual project’s `*.pages.dev` hostname if Cloudflare does not create it automatically. Adding only a DNS record without associating the domain with Pages is insufficient.
+The custom domain is associated with the Pages project. Cloudflare manages the CNAME `miri` → `miri-soundboard.pages.dev` in the `atlesque.dev` zone and provisions HTTPS automatically.
 
-Hosting and DNS have not been changed yet.
+Deployment settings and history: https://dash.cloudflare.com/df08931372f873bc0c8edb7679dc0cf4/pages/view/miri-soundboard
 
 Official references:
 - https://developers.cloudflare.com/pages/framework-guides/deploy-anything/

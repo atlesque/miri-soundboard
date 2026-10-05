@@ -22,31 +22,46 @@ document.querySelectorAll('button[data-theme]').forEach(button => button.addEven
 }));
 systemTheme.addEventListener('change', applyTheme);
 applyTheme();
-// A small hand-drawn pixel cat, with a different expression and silhouette per pad.
-function pixelCat(pose) {
+// Shared portrait: Miri's warm brown tabby coat, tall ears, round eyes and cream muzzle.
+function pixelCat() {
   const pixels = new Map();
-  const rect = (x, y, w, h, color='body') => { for(let a=x;a<x+w;a++) for(let b=y;b<y+h;b++) pixels.set(`${a},${b}`, color); };
-  rect(6,6,12,9); rect(5,8,14,5); rect(6,3,2,4); rect(8,4,2,3); rect(16,3,2,4); rect(14,4,2,3);
-  rect(7,4,1,2,'pink'); rect(16,4,1,2,'pink');
-  rect(8,14,8,5); rect(7,18,3,2); rect(14,18,3,2); rect(17,15,3,2); rect(19,12,2,4);
-  rect(7,12,2,1,'pink'); rect(15,12,2,1,'pink');
-  if(pose==='sleep'){rect(8,10,3,1,'eye');rect(14,10,3,1,'eye');rect(19,3,3,1,'accent');rect(20,4,1,1,'accent');rect(19,5,3,1,'accent');}
-  else if(pose==='serious'){rect(8,9,3,1,'eye');rect(14,9,3,1,'eye');rect(9,10,1,2,'eye');rect(14,10,1,2,'eye');}
-  else if(pose==='please'){rect(8,9,3,3,'eye');rect(14,9,3,3,'eye');rect(8,9,1,1,'shine');rect(14,9,1,1,'shine');rect(10,15,4,2,'pink');}
-  else {rect(9,9,2,2,'eye');rect(14,9,2,2,'eye');rect(9,9,1,1,'shine');rect(14,9,1,1,'shine');}
-  rect(11,12,2,1,'nose');
-  if(['food','long','protest'].includes(pose)){rect(10,13,4,2,'eye');rect(11,14,2,1,'pink');}
-  else {rect(11,13,1,1,'eye');rect(10,14,1,1,'eye');rect(12,14,1,1,'eye');}
-  if(pose==='hello'){rect(4,13,2,4);rect(3,12,2,2);}
-  if(pose==='food'){rect(3,20,18,1,'accent');rect(6,21,12,1,'accent');}
-  if(pose==='chirp'){rect(20,5,1,5,'accent');rect(19,9,2,2,'accent');rect(21,5,2,1,'accent');}
-  if(pose==='question'){rect(20,2,3,1,'accent');rect(22,3,1,2,'accent');rect(21,5,1,1,'accent');rect(21,7,1,1,'accent');}
-  if(pose==='long'){rect(2,9,1,5,'accent');rect(0,10,1,3,'accent');rect(21,9,1,5,'accent');rect(23,10,1,3,'accent');}
-  if(pose==='protest'){rect(20,3,1,3,'accent');rect(20,7,1,1,'accent');}
-  const palette={body:'currentColor',pink:'#c0767b',eye:'#10171a',shine:'#f5ffff',nose:'#efbec0',accent:'currentColor'};
-  return `<svg viewBox="0 0 24 24" class="pixel-cat" aria-hidden="true" shape-rendering="crispEdges">${[...pixels].map(([xy,c])=>{const [x,y]=xy.split(',');return `<rect x="${x}" y="${y}" width="1" height="1" fill="${palette[c]}"/>`;}).join('')}</svg>`;
+  const rect = (x, y, w, h, color) => {
+    for (let a=x; a<x+w; a++) for (let b=y; b<y+h; b++) pixels.set(`${a},${b}`, color);
+  };
+  const palette = {
+    outline:'#30231b', fur:'#a77b49', gold:'#c49a60', shadow:'#765235',
+    stripe:'#423025', ear:'#bc8c79', cream:'#e9d6b5', iris:'#b4ad62',
+    eye:'#111512', shine:'#fff9e8', nose:'#875748', whisker:'#efe2ca'
+  };
+  // Upright ears and softly rounded cheeks.
+  rect(5,2,3,12,'outline'); rect(8,5,3,9,'outline');
+  rect(24,3,3,11,'outline'); rect(21,6,3,8,'outline');
+  rect(6,3,1,7,'gold'); rect(7,5,2,7,'fur'); rect(7,6,1,5,'ear');
+  rect(25,4,1,7,'gold'); rect(23,6,2,6,'fur'); rect(24,7,1,4,'ear');
+  rect(8,9,16,20,'outline'); rect(5,12,22,13,'outline'); rect(7,25,18,3,'outline');
+  rect(8,10,16,17,'fur'); rect(6,13,20,11,'fur'); rect(9,26,14,2,'cream');
+  rect(9,11,5,7,'gold'); rect(19,11,4,7,'gold'); rect(7,19,5,5,'gold');
+  rect(21,19,4,5,'shadow'); rect(14,12,4,10,'gold');
+  // M-shaped forehead stripes and the dark markings beside her eyes.
+  rect(10,10,2,3,'stripe'); rect(12,12,2,2,'stripe'); rect(14,10,2,3,'stripe');
+  rect(17,10,2,3,'stripe'); rect(19,12,2,2,'stripe'); rect(21,10,2,3,'stripe');
+  rect(15,14,2,3,'shadow'); rect(6,16,2,1,'stripe'); rect(24,16,2,1,'stripe');
+  rect(6,20,3,1,'stripe'); rect(23,20,3,1,'stripe');
+  rect(7,23,3,1,'stripe'); rect(22,23,3,1,'stripe');
+  // Large green-gold eyes with near-black pupils and bright reflections.
+  for (const x of [9,19]) {
+    rect(x,15,5,6,'outline'); rect(x-1,16,7,4,'outline');
+    rect(x,16,5,4,'iris'); rect(x+1,16,3,4,'eye');
+    rect(x+1,16,1,1,'shine'); rect(x+3,18,1,1,'shine');
+  }
+  rect(11,22,10,4,'cream'); rect(10,23,12,2,'cream');
+  rect(14,21,4,2,'outline'); rect(15,21,2,1,'nose');
+  rect(15,23,2,1,'outline'); rect(14,24,1,1,'shadow'); rect(17,24,1,1,'shadow');
+  rect(3,22,7,1,'whisker'); rect(2,24,7,1,'whisker');
+  rect(22,22,7,1,'whisker'); rect(23,24,7,1,'whisker');
+  return `<svg viewBox="0 0 32 32" class="pixel-cat" aria-hidden="true" shape-rendering="crispEdges">${[...pixels].map(([xy,c])=>{const [x,y]=xy.split(',');return `<rect x="${x}" y="${y}" width="1" height="1" fill="${palette[c]}"/>`;}).join('')}</svg>`;
 }
-$('.pads').innerHTML = sounds.map(s => `<button class="pad" style="--pad-color:${s.color};--cat-light:${s.lightColor}" data-id="${s.id}" aria-label="${s.id}. ${s.name}" aria-disabled="true" aria-pressed="false"><span class="pad-face"><span class="led-screen">${pixelCat(s.pose)}<span class="led-dot"></span></span><span class="pad-caption"><span>${s.name}</span><kbd>${s.id}</kbd></span></span></button>`).join('');
+$('.pads').innerHTML = sounds.map(s => `<button class="pad" style="--pad-color:${s.color};--cat-light:${s.lightColor}" data-id="${s.id}" aria-label="${s.id}. ${s.name}" aria-disabled="true" aria-pressed="false"><span class="pad-face"><span class="led-screen">${pixelCat()}<span class="led-dot"></span></span><span class="pad-caption"><span>${s.name}</span><kbd>${s.id}</kbd></span></span></button>`).join('');
 function clear(id) {
   const audio = active.get(id);
   if (audio) { audio.pause(); audio.currentTime=0; active.delete(id); }

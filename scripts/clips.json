@@ -52,5 +52,77 @@
     "source": "IMG_5224.MOV",
     "start": 10.72,
     "end": 11.02
+  },
+  {
+    "id": 10,
+    "source": "IMG_0916.MOV",
+    "start": 3.75,
+    "end": 5.6,
+    "fadeIn": 0.025,
+    "fadeOut": 0.18
+  },
+  {
+    "id": 11,
+    "source": "IMG_0916.MOV",
+    "start": 13.35,
+    "end": 14.38,
+    "fadeIn": 0.025,
+    "fadeOut": 0.14
+  },
+  {
+    "id": 12,
+    "source": "IMG_0916.MOV",
+    "start": 16.4,
+    "end": 17.63,
+    "fadeIn": 0.025,
+    "fadeOut": 0.14
+  },
+  {
+    "id": 13,
+    "source": "IMG_2144.MOV",
+    "start": 3.72,
+    "end": 4.97,
+    "fadeIn": 0.025,
+    "fadeOut": 0.14
+  },
+  {
+    "id": 14,
+    "source": "IMG_2144.MOV",
+    "start": 19.08,
+    "end": 20.45,
+    "fadeIn": 0.025,
+    "fadeOut": 0.14
+  },
+  {
+    "id": 15,
+    "source": "IMG_2489.MOV",
+    "start": 0.03,
+    "end": 1.25,
+    "fadeIn": 0.025,
+    "fadeOut": 0.14
+  },
+  {
+    "id": 16,
+    "source": "IMG_2489.MOV",
+    "start": 3.15,
+    "end": 4.12,
+    "fadeIn": 0.025,
+    "fadeOut": 0.14
+  },
+  {
+    "id": 17,
+    "source": "IMG_2489.MOV",
+    "start": 13.25,
+    "end": 14.75,
+    "fadeIn": 0.025,
+    "fadeOut": 0.18
+  },
+  {
+    "id": 18,
+    "source": "IMG_2823.MOV",
+    "start": 6.8,
+    "end": 8.05,
+    "fadeIn": 0.025,
+    "fadeOut": 0.14
   }
 ]

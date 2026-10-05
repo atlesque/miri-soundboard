@@ -1,6 +1,6 @@
 # Miri sound machine
 
-A static, responsive 3 × 3 soundboard for Miri. The device has sculpted buttons, recessed LED pixel cats, light/dark/system appearance, keyboard shortcuts (1–9 and Escape), a stop button, and volume control.
+A static, responsive 3 × 3 soundboard for Miri, with two pages of recordings. The device has sculpted buttons, recessed LED pixel cats, a tiny LCD page toggle, light/dark/system appearance, keyboard shortcuts (1–9 for the displayed page and Escape to stop), a stop button, and volume control. Changing pages stops any playing sounds.
 
 ## Run locally
 
@@ -13,13 +13,17 @@ Production build: `npm run build`. The publishable website is **only `dist/`**. 
 
 ## Recordings
 
-Nine distinct Miri calls are connected to all nine pads. They come from IMG_4589, IMG_4968, IMG_5120, and IMG_5224; the final source was exported directly from Apple Photos. Labels are playful names, not interpretations of her intent.
+Page one opens with nine new excerpts from IMG_0916, IMG_2144, IMG_2489, and IMG_2823, exported as unmodified originals from Apple Photos. These run from 0.97 to 1.85 seconds, including a two-call phrase, with 25 ms fade-ins and 140–180 ms fade-outs. IMG_1298 was also reviewed; its purring was excluded from the meow selection. Each excerpt uses a separate, non-overlapping interval.
+
+Page two contains the original nine Miri calls from IMG_4589, IMG_4968, IMG_5120, and IMG_5224. Their files and IDs are preserved. Labels are playful names, not interpretations of her intent.
 
 Source videos belong in `source-videos/`. Exact selected intervals are in `scripts/clips.json`; times are seconds into each original. Rebuild the recordings with:
 
 ```sh
 python3 scripts/extract-audio.py
 ```
+
+To rebuild only the new recordings while preserving the originals: `python3 scripts/extract-audio.py --ids 10 11 12 13 14 15 16 17 18`.
 
 Requires ffmpeg on PATH. The script selects the AAC stereo track, converts to mono MP3, removes video metadata, filters low-frequency rumble and high-frequency noise, adjusts volume, and adds short fades to avoid clicks. It never changes the originals. It generates `public/audio/manifest.json`; only the chosen clips are published.
 

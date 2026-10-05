@@ -9,3 +9,10 @@ export const sounds = [
   { name: 'Serious business', color: '#ff6557', lightColor: '#de3e31' },
   { name: 'Goodnight', color: '#43e1f4', lightColor: '#0099ba' },
 ].map((sound, i) => ({ ...sound, id: i + 1, src: null }));
+
+const newNames = ['Double take', 'Stairway chat', 'Little question', 'Shelf supervisor', 'Long story', 'Open the door', 'Another word', 'Doorway duet', 'Curtain call'];
+export const soundPages = [
+  sounds.map((sound, i) => ({ ...sound, id: i + 10, name: newNames[i] })),
+  sounds,
+];
+export const allSounds = soundPages.flat();

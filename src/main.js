@@ -1,11 +1,12 @@
 import '@fontsource-variable/dm-sans';
 import '@fontsource-variable/manrope';
 import './style.css';
-import { sounds } from './sounds.js';
+import { allSounds, soundPages } from './sounds.js';
 const $ = (selector) => document.querySelector(selector);
 const status = $('#status');
 const active = new Map();
 let volume = .75;
+let page = 0;
 let theme;
 try { theme = localStorage.getItem('miri-theme') || 'system'; } catch { theme = 'system'; }
 const systemTheme = matchMedia('(prefers-color-scheme: dark)');
@@ -139,16 +140,29 @@ function pixelCat(expression) {
   rect(22,22,7,1,'whisker'); rect(23,24,7,1,'whisker');
   return `<svg viewBox="0 0 32 32" class="pixel-cat" aria-hidden="true" shape-rendering="crispEdges">${[...pixels].map(([xy,c])=>{const [x,y]=xy.split(',');return `<rect x="${x}" y="${y}" width="1" height="1" fill="${palette[c]}"/>`;}).join('')}</svg>`;
 }
-$('.pads').innerHTML = sounds.map(s => `<button class="pad" style="--pad-color:${s.color};--cat-light:${s.lightColor}" data-id="${s.id}" aria-label="${s.id}. ${s.name}" aria-disabled="true" aria-pressed="false"><span class="pad-face"><span class="led-screen">${pixelCat(s.id)}</span><span class="pad-caption"><span>${s.name}</span><kbd>${s.id}</kbd></span></span></button>`).join('');
+function renderPads() {
+  $('.pads').innerHTML = soundPages[page].map((s, i) => `<button class="pad" style="--pad-color:${s.color};--cat-light:${s.lightColor}" data-id="${s.id}" aria-label="${i + 1}. ${s.name}" aria-disabled="${!s.src}" aria-pressed="false"><span class="pad-face"><span class="led-screen">${pixelCat(i + 1)}</span><span class="pad-caption"><span>${s.name}</span><kbd>${i + 1}</kbd></span></span></button>`).join('');
+  $('.pads').setAttribute('aria-label', `Page ${page + 1} sound buttons`);
+  $('.page-lcd').textContent = `0${page + 1} / 0${soundPages.length}`;
+  $('#page-label').textContent = page === 0 ? 'FRESH MEOWS' : 'THE ORIGINALS';
+  $('#page-toggle').setAttribute('aria-label', `Page ${page + 1} of ${soundPages.length}. Switch to page ${(page + 1) % soundPages.length + 1}`);
+}
+renderPads();
+$('#page-toggle').addEventListener('click', () => {
+  stopAll();
+  page = (page + 1) % soundPages.length;
+  renderPads();
+  status.textContent = `Page ${page + 1}: ${page === 0 ? 'fresh meows' : 'the originals'}. Keys 1 to 9 play this page.`;
+});
 function clear(id) {
   const audio = active.get(id);
   if (audio) { audio.pause(); audio.currentTime=0; active.delete(id); }
-  const button=document.querySelector(`[data-id="${id}"]`); button.classList.remove('playing'); button.setAttribute('aria-pressed','false');
+  const button=document.querySelector(`[data-id="${id}"]`); if (button) { button.classList.remove('playing'); button.setAttribute('aria-pressed','false'); }
   $('.power').classList.toggle('sounding',active.size>0);
 }
-function stopAll() { [...active.keys()].forEach(clear); status.textContent = sounds.some(s=>s.src) ? 'Quiet, for now.' : 'Miri’s recordings are being prepared.'; }
+function stopAll() { [...active.keys()].forEach(clear); status.textContent = allSounds.some(s=>s.src) ? 'Quiet, for now.' : 'Miri’s recordings are being prepared.'; }
 async function play(id) {
-  const sound=sounds.find(s=>s.id===id);
+  const sound=allSounds.find(s=>s.id===id);
   if (!sound.src) {status.textContent='This button is waiting for Miri’s recording.';return;}
   clear(id);
   const audio=new Audio(sound.src); audio.volume=volume; active.set(id,audio);
@@ -163,14 +177,15 @@ $('#volume').addEventListener('input',event=>{volume=Number(event.target.value)/
 document.addEventListener('keydown',event=>{
   if(event.key==='Escape')stopAll();
   if(event.repeat||event.ctrlKey||event.metaKey||event.altKey||['INPUT','TEXTAREA','SELECT'].includes(event.target.tagName))return;
-  if(/^[1-9]$/.test(event.key)){event.preventDefault();play(Number(event.key));}
+  if(/^[1-9]$/.test(event.key)){event.preventDefault();play(soundPages[page][Number(event.key) - 1].id);}
 });
 try {
   const response=await fetch('/audio/manifest.json');
   if(!response.ok)throw new Error('Manifest unavailable');
   const recordings=await response.json();
-  for(const recording of recordings){const sound=sounds.find(s=>s.id===recording.id);if(sound && /^\/audio\/[a-zA-Z0-9._-]+\.(mp3|wav|m4a|ogg)$/.test(recording.src)){
-    sound.src=recording.src;document.querySelector(`[data-id="${sound.id}"]`).setAttribute('aria-disabled','false');
+  for(const recording of recordings){const sound=allSounds.find(s=>s.id===recording.id);if(sound && /^\/audio\/[a-zA-Z0-9._-]+\.(mp3|wav|m4a|ogg)$/.test(recording.src)){
+    sound.src=recording.src;
   }}
-  if(sounds.some(s=>s.src))status.textContent='Your move, human.';
+  renderPads();
+  if(allSounds.some(s=>s.src))status.textContent='Your move, human.';
 } catch {status.textContent='Recordings are unavailable. Please refresh to try again.';}

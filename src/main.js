@@ -23,7 +23,7 @@ document.querySelectorAll('button[data-theme]').forEach(button => button.addEven
 systemTheme.addEventListener('change', applyTheme);
 applyTheme();
 // Shared portrait: Miri's warm brown tabby coat, tall ears, round eyes and cream muzzle.
-function pixelCat() {
+function pixelCat(expression) {
   const pixels = new Map();
   const rect = (x, y, w, h, color) => {
     for (let a=x; a<x+w; a++) for (let b=y; b<y+h; b++) pixels.set(`${a},${b}`, color);
@@ -48,20 +48,33 @@ function pixelCat() {
   rect(15,14,2,3,'shadow'); rect(6,16,2,1,'stripe'); rect(24,16,2,1,'stripe');
   rect(6,20,3,1,'stripe'); rect(23,20,3,1,'stripe');
   rect(7,23,3,1,'stripe'); rect(22,23,3,1,'stripe');
-  // Large green-gold eyes with near-black pupils and bright reflections.
-  for (const x of [9,19]) {
-    rect(x,15,5,6,'outline'); rect(x-1,16,7,4,'outline');
-    rect(x,16,5,4,'iris'); rect(x+1,16,3,4,'eye');
-    rect(x+1,16,1,1,'shine'); rect(x+3,18,1,1,'shine');
+  // Round, oversized eyes keep the same tabby face across all expressions.
+  for (const x of [8,19]) {
+    rect(x,15,6,6,'outline'); rect(x-1,16,8,4,'outline');
+    rect(x,16,6,4,'iris'); rect(x+1,16,4,4,'eye');
+    rect(x+1,16,2,2,'shine'); rect(x+4,19,1,1,'shine');
   }
+  if ([3,7,9].includes(expression)) {
+    for (const x of [7,18]) {
+      rect(x,15,8,6,'fur');
+      if (expression===9) rect(x+1,18,6,1,'outline');
+      else {rect(x+1,18,2,1,'outline');rect(x+3,17,2,1,'outline');rect(x+5,18,2,1,'outline');}
+    }
+  }
+  if (expression===4) {rect(19,15,6,6,'fur');rect(19,18,6,1,'outline');}
+  if (expression===6) {rect(7,15,8,2,'fur');rect(18,15,8,2,'fur');rect(8,16,6,1,'outline');rect(19,16,6,1,'outline');}
+  if (expression===8) {rect(8,14,4,1,'outline');rect(22,14,3,1,'outline');}
   rect(11,22,10,4,'cream'); rect(10,23,12,2,'cream');
+  if ([2,5].includes(expression)) {rect(14,24,4,3,'outline');rect(15,25,2,1,'ear');}
   rect(14,21,4,2,'outline'); rect(15,21,2,1,'nose');
   rect(15,23,2,1,'outline'); rect(14,24,1,1,'shadow'); rect(17,24,1,1,'shadow');
+  if (expression===2) {rect(9,13,3,1,'outline');rect(21,13,3,1,'outline');}
+  if (expression===7) {rect(8,22,2,1,'ear');rect(22,22,2,1,'ear');rect(15,25,2,1,'ear');}
   rect(3,22,7,1,'whisker'); rect(2,24,7,1,'whisker');
   rect(22,22,7,1,'whisker'); rect(23,24,7,1,'whisker');
   return `<svg viewBox="0 0 32 32" class="pixel-cat" aria-hidden="true" shape-rendering="crispEdges">${[...pixels].map(([xy,c])=>{const [x,y]=xy.split(',');return `<rect x="${x}" y="${y}" width="1" height="1" fill="${palette[c]}"/>`;}).join('')}</svg>`;
 }
-$('.pads').innerHTML = sounds.map(s => `<button class="pad" style="--pad-color:${s.color};--cat-light:${s.lightColor}" data-id="${s.id}" aria-label="${s.id}. ${s.name}" aria-disabled="true" aria-pressed="false"><span class="pad-face"><span class="led-screen">${pixelCat()}<span class="led-dot"></span></span><span class="pad-caption"><span>${s.name}</span><kbd>${s.id}</kbd></span></span></button>`).join('');
+$('.pads').innerHTML = sounds.map(s => `<button class="pad" style="--pad-color:${s.color};--cat-light:${s.lightColor}" data-id="${s.id}" aria-label="${s.id}. ${s.name}" aria-disabled="true" aria-pressed="false"><span class="pad-face"><span class="led-screen">${pixelCat(s.id)}<span class="led-dot"></span></span><span class="pad-caption"><span>${s.name}</span><kbd>${s.id}</kbd></span></span></button>`).join('');
 function clear(id) {
   const audio = active.get(id);
   if (audio) { audio.pause(); audio.currentTime=0; active.delete(id); }

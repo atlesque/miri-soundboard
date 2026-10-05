@@ -39,8 +39,13 @@ function pixelCat(expression) {
   rect(24,3,3,11,'outline'); rect(21,6,3,8,'outline');
   rect(6,3,1,7,'gold'); rect(7,5,2,7,'fur'); rect(7,6,1,5,'ear');
   rect(25,4,1,7,'gold'); rect(23,6,2,6,'fur'); rect(24,7,1,4,'ear');
-  rect(8,9,16,20,'outline'); rect(5,12,22,13,'outline'); rect(7,25,18,3,'outline');
-  rect(8,10,16,17,'fur'); rect(6,13,20,11,'fur'); rect(9,26,14,2,'cream');
+  // An oval silhouette gives Miri fuller cheeks and a curved chin.
+  for (let y=9; y<30; y++) for (let x=3; x<29; x++) {
+    const outer=((x-15.5)/12.5)**2+((y-19)/10.5)**2;
+    const inner=((x-15.5)/11.5)**2+((y-19)/9.5)**2;
+    if (outer<=1) rect(x,y,1,1,inner<=1?'fur':'outline');
+  }
+  rect(11,26,10,2,'cream'); rect(13,28,6,1,'cream');
   rect(9,11,5,7,'gold'); rect(19,11,4,7,'gold'); rect(7,19,5,5,'gold');
   rect(21,19,4,5,'shadow'); rect(14,12,4,10,'gold');
   // M-shaped forehead stripes and the dark markings beside her eyes.

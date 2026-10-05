@@ -46,7 +46,7 @@ function pixelCat(pose) {
   const palette={body:'currentColor',pink:'#c0767b',eye:'#10171a',shine:'#f5ffff',nose:'#efbec0',accent:'currentColor'};
   return `<svg viewBox="0 0 24 24" class="pixel-cat" aria-hidden="true" shape-rendering="crispEdges">${[...pixels].map(([xy,c])=>{const [x,y]=xy.split(',');return `<rect x="${x}" y="${y}" width="1" height="1" fill="${palette[c]}"/>`;}).join('')}</svg>`;
 }
-$('.pads').innerHTML = sounds.map(s => `<button class="pad" style="--pad-color:${s.color}" data-id="${s.id}" aria-label="${s.id}. ${s.name}" aria-disabled="true" aria-pressed="false"><span class="pad-face"><span class="led-screen">${pixelCat(s.pose)}<span class="led-dot"></span></span><span class="pad-caption"><span>${s.name}</span><kbd>${s.id}</kbd></span></span></button>`).join('');
+$('.pads').innerHTML = sounds.map(s => `<button class="pad" style="--pad-color:${s.color};--cat-light:${s.lightColor}" data-id="${s.id}" aria-label="${s.id}. ${s.name}" aria-disabled="true" aria-pressed="false"><span class="pad-face"><span class="led-screen">${pixelCat(s.pose)}<span class="led-dot"></span></span><span class="pad-caption"><span>${s.name}</span><kbd>${s.id}</kbd></span></span></button>`).join('');
 function clear(id) {
   const audio = active.get(id);
   if (audio) { audio.pause(); audio.currentTime=0; active.delete(id); }

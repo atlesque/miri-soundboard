@@ -1,6 +1,6 @@
 # Miri sound machine
 
-A static, responsive 3 × 3 soundboard for Miri, with two pages of recordings. The device has sculpted buttons, recessed LED pixel cats, a tiny LCD page toggle, light/dark/system appearance, keyboard shortcuts (1–9 for the displayed page and Escape to stop), a stop button, and volume control. Changing pages stops any playing sounds.
+A static, responsive 3 × 3 soundboard for Miri, with two pages of recordings. The device has sculpted buttons, recessed LED pixel cats, a tiny LCD page display with rubber arrow buttons, light/dark/system appearance, keyboard shortcuts (1–9 for the displayed page and Escape to stop), a stop button, and volume control. The arrows cycle through pages in either direction; the display is not clickable. Changing pages stops any playing sounds.
 
 ## Run locally
 

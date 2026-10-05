@@ -92,7 +92,8 @@ function pixelCat(expression) {
   const palette = {
     outline:'#34302b', fur:'#948574', gold:'#afa18a', shadow:'#71665b',
     stripe:'#45403a', ear:'#aa9188', cream:'#ddd6c8', iris:'#a5a17c',
-    eye:'#111512', shine:'#fff9e8', nose:'#806c65', whisker:'#e6e1d6'
+    eye:'#111512', shine:'#fff9e8', nose:'#806c65', whisker:'#e6e1d6',
+    blush:'#c79592', curtain:'#a68daa', curtainShadow:'#75637f'
   };
   // Upright ears and softly rounded cheeks.
   rect(5,2,3,12,'outline'); rect(8,5,3,9,'outline');
@@ -138,22 +139,102 @@ function pixelCat(expression) {
   if (expression===7) {rect(8,22,2,1,'ear');rect(22,22,2,1,'ear');rect(15,25,2,1,'ear');}
   rect(3,22,7,1,'whisker'); rect(2,24,7,1,'whisker');
   rect(22,22,7,1,'whisker'); rect(23,24,7,1,'whisker');
+  if (expression >= 10) {
+    // Fresh portraits keep Miri's coat, with a separate expression for each new call.
+    const eyes = (style, gaze = 0) => {
+      for (const x of [7,18]) {
+        rect(x,14,8,7,'fur');
+        if (style === 'happy') {
+          rect(x+1,18,2,1,'outline'); rect(x+3,17,2,1,'outline'); rect(x+5,18,2,1,'outline');
+        } else if (style === 'sleepy') {
+          rect(x+1,17,6,1,'outline'); rect(x+2,18,4,1,'shadow');
+        } else {
+          rect(x+1,15,6,6,'outline'); rect(x,16,8,4,'outline');
+          rect(x+1,16,6,4,'iris'); rect(x+3+gaze,16,2,4,'eye');
+          rect(x+2+gaze,16,1,1,'shine');
+        }
+      }
+    };
+    const mouth = (width, height) => {
+      rect(11,23,10,5,'cream');
+      rect(16-Math.ceil(width/2),24,width,height,'outline');
+      if (height>2) rect(15,24+height-2,2,1,'blush');
+    };
+    const paw = x => {
+      rect(x,26,6,5,'outline'); rect(x+1,26,4,4,'gold');
+      rect(x+2,28,1,2,'shadow'); rect(x+4,28,1,2,'shadow');
+    };
+    switch (expression) {
+      case 10: // Double take: wide pupils, raised brows and a surprised O.
+        eyes('round');
+        rect(9,12,4,1,'outline'); rect(20,12,4,1,'outline');
+        for (const x of [10,21]) {rect(x,16,3,4,'eye');rect(x,16,1,2,'shine');}
+        mouth(4,4);
+        break;
+      case 11: // Stairway chat: looking up, with a paw raised to say hello.
+        eyes('round',1); mouth(3,2);
+        rect(1,17,6,10,'outline'); rect(2,18,4,8,'gold');
+        rect(2,18,4,2,'cream'); rect(3,19,1,2,'shadow');
+        break;
+      case 12: // Little question: mismatched brows and a tiny question mark.
+        eyes('round',1); mouth(2,2);
+        rect(8,13,5,1,'outline'); rect(21,12,4,1,'outline');
+        rect(28,2,3,1,'gold'); rect(30,3,1,2,'gold');
+        rect(29,5,2,1,'gold'); rect(29,6,1,1,'gold'); rect(29,8,1,1,'gold');
+        break;
+      case 13: // Shelf supervisor: a stern squint and neatly folded paws.
+        eyes('round');
+        for (const x of [8,19]) {rect(x,15,6,2,'fur');rect(x,16,6,1,'outline');}
+        mouth(6,1); paw(5); paw(21);
+        break;
+      case 14: // Long story: eyes squeezed shut for a full-throated meow.
+        eyes('happy'); mouth(6,5);
+        rect(8,22,2,1,'blush'); rect(22,22,2,1,'blush');
+        break;
+      case 15: // Open the door: expectant eyes, peering over a little ledge.
+        eyes('round'); mouth(3,2);
+        rect(1,28,30,4,'curtainShadow'); rect(1,28,30,1,'curtain');
+        paw(7); paw(19);
+        break;
+      case 16: // Another word: a wink and a cheeky little tongue.
+        eyes('round',-1);
+        rect(18,14,8,7,'fur'); rect(19,18,2,1,'outline');
+        rect(21,17,2,1,'outline'); rect(23,18,2,1,'outline');
+        mouth(4,2); rect(15,25,2,3,'blush'); rect(16,26,1,2,'nose');
+        break;
+      case 17: // Doorway duet: the same chatting face repeated as a pair below.
+        eyes('happy'); mouth(4,3);
+        break;
+      case 18: // Curtain call: a sleepy tabby peeking from behind a curtain.
+        eyes('sleepy'); mouth(2,1);
+        rect(23,1,8,30,'curtain'); rect(25,1,2,30,'curtainShadow');
+        rect(29,1,2,30,'curtainShadow'); rect(23,29,8,2,'outline');
+        paw(21);
+        break;
+    }
+  }
+  if (expression === 17) {
+    const face = [...pixels].map(([xy,c])=>{const [x,y]=xy.split(',');return `<rect x="${x}" y="${y}" width="1" height="1" fill="${palette[c]}"/>`;}).join('');
+    return `<svg viewBox="0 0 32 32" class="pixel-cat" aria-hidden="true" shape-rendering="crispEdges"><g transform="translate(0 6) scale(.6)">${face}</g><g transform="translate(13 8) scale(.6)">${face}</g></svg>`;
+  }
   return `<svg viewBox="0 0 32 32" class="pixel-cat" aria-hidden="true" shape-rendering="crispEdges">${[...pixels].map(([xy,c])=>{const [x,y]=xy.split(',');return `<rect x="${x}" y="${y}" width="1" height="1" fill="${palette[c]}"/>`;}).join('')}</svg>`;
 }
 function renderPads() {
-  $('.pads').innerHTML = soundPages[page].map((s, i) => `<button class="pad" style="--pad-color:${s.color};--cat-light:${s.lightColor}" data-id="${s.id}" aria-label="${i + 1}. ${s.name}" aria-disabled="${!s.src}" aria-pressed="false"><span class="pad-face"><span class="led-screen">${pixelCat(i + 1)}</span><span class="pad-caption"><span>${s.name}</span><kbd>${i + 1}</kbd></span></span></button>`).join('');
+  $('.pads').innerHTML = soundPages[page].map((s, i) => `<button class="pad" style="--pad-color:${s.color};--cat-light:${s.lightColor}" data-id="${s.id}" aria-label="${i + 1}. ${s.name}" aria-disabled="${!s.src}" aria-pressed="false"><span class="pad-face"><span class="led-screen">${pixelCat(s.id)}</span><span class="pad-caption"><span>${s.name}</span><kbd>${i + 1}</kbd></span></span></button>`).join('');
   $('.pads').setAttribute('aria-label', `Page ${page + 1} sound buttons`);
   $('.page-lcd').textContent = `0${page + 1} / 0${soundPages.length}`;
   $('#page-label').textContent = page === 0 ? 'FRESH MEOWS' : 'THE ORIGINALS';
-  $('#page-toggle').setAttribute('aria-label', `Page ${page + 1} of ${soundPages.length}. Switch to page ${(page + 1) % soundPages.length + 1}`);
+  $('.page-lcd').setAttribute('aria-label', `Page ${page + 1} of ${soundPages.length}`);
 }
 renderPads();
-$('#page-toggle').addEventListener('click', () => {
+function changePage(direction) {
   stopAll();
-  page = (page + 1) % soundPages.length;
+  page = (page + direction + soundPages.length) % soundPages.length;
   renderPads();
   status.textContent = `Page ${page + 1}: ${page === 0 ? 'fresh meows' : 'the originals'}. Keys 1 to 9 play this page.`;
-});
+}
+$('#page-previous').addEventListener('click', () => changePage(-1));
+$('#page-next').addEventListener('click', () => changePage(1));
 function clear(id) {
   const audio = active.get(id);
   if (audio) { audio.pause(); audio.currentTime=0; active.delete(id); }

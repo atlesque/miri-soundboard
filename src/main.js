@@ -10,6 +10,7 @@ let theme;
 try { theme = localStorage.getItem('miri-theme') || 'system'; } catch { theme = 'system'; }
 const systemTheme = matchMedia('(prefers-color-scheme: dark)');
 function applyTheme() {
+  $('.theme-switch').dataset.position = theme;
   document.documentElement.dataset.theme = theme === 'system' ? (systemTheme.matches ? 'dark' : 'light') : theme;
   document.querySelectorAll('[data-theme]').forEach(button => {
     if (button.tagName === 'BUTTON') button.setAttribute('aria-pressed', String(button.dataset.theme === theme));

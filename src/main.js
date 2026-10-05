@@ -29,9 +29,9 @@ function pixelCat() {
     for (let a=x; a<x+w; a++) for (let b=y; b<y+h; b++) pixels.set(`${a},${b}`, color);
   };
   const palette = {
-    outline:'#30231b', fur:'#a77b49', gold:'#c49a60', shadow:'#765235',
-    stripe:'#423025', ear:'#bc8c79', cream:'#e9d6b5', iris:'#b4ad62',
-    eye:'#111512', shine:'#fff9e8', nose:'#875748', whisker:'#efe2ca'
+    outline:'#34302b', fur:'#948574', gold:'#afa18a', shadow:'#71665b',
+    stripe:'#45403a', ear:'#aa9188', cream:'#ddd6c8', iris:'#a5a17c',
+    eye:'#111512', shine:'#fff9e8', nose:'#806c65', whisker:'#e6e1d6'
   };
   // Upright ears and softly rounded cheeks.
   rect(5,2,3,12,'outline'); rect(8,5,3,9,'outline');

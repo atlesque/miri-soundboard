@@ -242,16 +242,16 @@ $('#page-next').addEventListener('click', () => changePage(1));
 function clear(id) {
   const audio = active.get(id);
   if (audio) { audio.pause(); audio.currentTime=0; active.delete(id); }
-  const button=document.querySelector(`[data-id="${id}"]`); if (button) { button.classList.remove('playing'); button.setAttribute('aria-pressed','false'); }
+  const button=document.querySelector(`[data-id="${id}"]`); if (button) { button.disabled=false; button.classList.remove('playing'); button.setAttribute('aria-disabled','false'); button.setAttribute('aria-pressed','false'); }
   $('.power').classList.toggle('sounding',active.size>0);
 }
 function stopAll() { [...active.keys()].forEach(clear); status.textContent = allSounds.some(s=>s.src) ? 'Quiet, for now.' : 'Miri’s recordings are being prepared.'; }
 async function play(id) {
+  if (active.has(id)) return;
   const sound=allSounds.find(s=>s.id===id);
   if (!sound.src) {status.textContent='This button is waiting for Miri’s recording.';return;}
-  clear(id);
   const audio=new Audio(sound.src); audio.volume=volume; active.set(id,audio);
-  const button=document.querySelector(`[data-id="${id}"]`); button.classList.add('playing'); button.setAttribute('aria-pressed','true'); $('.power').classList.add('sounding');
+  const button=document.querySelector(`[data-id="${id}"]`); button.disabled=true; button.classList.add('playing'); button.setAttribute('aria-disabled','true'); button.setAttribute('aria-pressed','true'); $('.power').classList.add('sounding');
   audio.addEventListener('ended',()=>{ if(active.get(id)===audio) clear(id);});
   try { await audio.play(); if(active.get(id)===audio) status.textContent=`Miri says: ${sound.name.toLowerCase()}.`; }
   catch {if(active.get(id)===audio) {clear(id); status.textContent='Couldn’t play this recording. Try again.';}}

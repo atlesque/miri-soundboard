@@ -28,10 +28,10 @@ test('every assigned pad has a distinct, valid, decodable recording with the sel
   assert.equal(new Set(manifest.map(x=>x.src)).size,manifest.length);
   for(const recording of manifest){
     assert.ok(recording.id>=1 && recording.id<=35);
-    assert.match(recording.src,/^\/audio\/miri-\d{2}(?:-[a-f0-9]{12})?\.mp3$/);
+    assert.match(recording.src,/^\/audio\/miri-\d{2}-[a-f0-9]{12}\.mp3$/);
     const file=new URL(`../public${recording.src}`,import.meta.url);
     const hash=recording.src.match(/-([a-f0-9]{12})\.mp3$/)?.[1];
-    if(recording.id<=9) assert.ok(hash,'recut originals must use a fresh content-based URL');
+    assert.ok(hash,'every recording must use a content-based URL');
     if(hash) assert.equal(hash,createHash('sha256').update(readFileSync(file)).digest('hex').slice(0,12));
     assert.ok(statSync(file).size>1000);
     const info=JSON.parse(execFileSync('ffprobe',['-v','error','-show_entries','format=duration:stream=codec_type,codec_name','-of','json',file.pathname],{encoding:'utf8'}));

@@ -17,7 +17,7 @@ Pages one and two open with 17 new calls and short phrases from IMG_5533, IMG_55
 
 Page three contains nine excerpts from IMG_0916, IMG_2144, IMG_2489, and IMG_2823, exported as unmodified originals from Apple Photos. These run from 0.97 to 1.85 seconds, including a two-call phrase, with 25 ms fade-ins and 140–180 ms fade-outs. IMG_1298 was also reviewed; its purring was excluded from the meow selection. Each excerpt uses a separate, non-overlapping interval.
 
-Page four contains the original nine Miri calls from IMG_4589, IMG_4968, IMG_5120, and IMG_5224. These have been recut from the original videos at their original speed, with extra audio before and after each call and gentle edge fades. Clips run from 0.76 to 1.20 seconds; the two closely spaced calls share a cut boundary to keep their excerpts separate. Filenames and IDs are preserved. Labels are playful names, not interpretations of her intent.
+Page four contains the original nine Miri calls from IMG_4589, IMG_4968, IMG_5120, and IMG_5224. These have been recut from the original videos at their original speed, with extra audio before and after each call and gentle edge fades. Clips run from 0.76 to 1.20 seconds; the two closely spaced calls share a cut boundary to keep their excerpts separate. IDs are preserved; recut audio uses filenames containing a content hash to prevent stale cached playback. Labels are playful names, not interpretations of her intent.
 
 Source videos belong in `source-videos/`. Exact selected intervals are in `scripts/clips.json`; times are seconds into each original. Rebuild the recordings with:
 
@@ -45,7 +45,7 @@ The GitHub repository [atlesque/miri-soundboard](https://github.com/atlesque/mir
 - Production branch: `main`
 - Node.js: 24 (selected by `.node-version`)
 
-The `public/_headers` file is copied to `dist/` and applies security headers and mandatory cache revalidation to every response on Pages. On each visit or regular refresh, the browser checks the current deployment before reusing HTML, audio, or other cached files; unchanged files can still use an ETag/304 response. The recording manifest is bundled into the app's content-hashed JavaScript build, so each deployment's interface and recording list update together, even if a visitor previously cached an older `audio/manifest.json`. These settings ship with every deployment and require no manual cache purge or hard refresh.
+The `public/_headers` file is copied to `dist/` and applies security headers and mandatory cache revalidation to every response on Pages. On each visit or regular refresh, the browser checks the current deployment before reusing HTML, audio, or other cached files; unchanged files can still use an ETag/304 response. The recording manifest is bundled into the app's content-hashed JavaScript build, so each deployment's interface and recording list update together, even if a visitor previously cached an older `audio/manifest.json`. Rebuilt audio filenames include a content hash, so a changed recording gets a fresh URL even if an older URL remains cached by a browser or CDN. These settings ship with every deployment.
 
 The custom domain is associated with the Pages project. Cloudflare manages the CNAME `miri` → `miri-soundboard.pages.dev` in the `atlesque.dev` zone and provisions HTTPS automatically.
 

@@ -1,6 +1,7 @@
 """Rebuild the selected Miri clips locally. Requires ffmpeg; no Python packages needed."""
 import array
 import argparse
+import hashlib
 import json
 import math
 import subprocess
@@ -44,6 +45,11 @@ for clip in clips:
                     '-t', str(duration), '-map', '0:a:0', '-vn', '-ac', '1', '-ar', '48000',
                     '-af', filters, '-c:a', 'libmp3lame', '-b:a', '128k', '-map_metadata', '-1',
                     str(out/filename)], check=True)
+    # A new URL prevents existing browser/CDN caches from serving an older cut.
+    digest = hashlib.sha256((out / filename).read_bytes()).hexdigest()[:12]
+    versioned_filename = f'miri-{clip["id"]:02d}-{digest}.mp3'
+    (out / filename).replace(out / versioned_filename)
+    filename = versioned_filename
     manifest.append({'id':clip['id'], 'src':f'/audio/{filename}', 'duration':round(duration,3)})
     print(f'{filename}: {duration:.2f}s, gain {gain_db:.1f}dB')
 manifest_path.write_text(json.dumps(sorted(manifest, key=lambda recording: recording['id']), indent=2)+'\n')

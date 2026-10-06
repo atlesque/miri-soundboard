@@ -35,7 +35,9 @@ test('every assigned pad has a distinct, valid, decodable recording with the sel
     assert.equal(info.streams[0].codec_type,'audio');
     assert.equal(info.streams[0].codec_name,'mp3');
     const clip=clips.find(c=>c.id===recording.id);
-    assert.ok(Math.abs(Number(info.format.duration)-(clip.end-clip.start))<.1);
+    const duration=clip.end-clip.start;
+    assert.ok(Math.abs(recording.duration-duration)<.001);
+    assert.ok(Math.abs(Number(info.format.duration)-duration)<.1);
     execFileSync('ffmpeg',['-v','error','-i',file.pathname,'-f','null','-']);
   }
 });

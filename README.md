@@ -1,6 +1,6 @@
 # Miri sound machine
 
-A static, responsive 3 × 3 soundboard for Miri, with two pages of recordings. The device has sculpted buttons, recessed LED pixel cats, a tiny LCD page display with rubber arrow buttons, light/dark/system appearance, keyboard shortcuts (1–9 for the displayed page and Escape to stop), a stop button, and volume control. The arrows cycle through pages in either direction; the display is not clickable. Changing pages stops any playing sounds.
+A static, responsive 3 × 3 soundboard for Miri, with four pages of recordings. The device has sculpted buttons, recessed LED pixel cats, a tiny LCD page display with rubber arrow buttons, light/dark/system appearance, keyboard shortcuts (1–9 for the displayed page and Escape to stop), a stop button, and volume control. The arrows cycle through pages in either direction; the display is not clickable. Changing pages stops any playing sounds.
 
 ## Run locally
 
@@ -13,9 +13,11 @@ Production build: `npm run build`. The publishable website is **only `dist/`**. 
 
 ## Recordings
 
-Page one opens with nine new excerpts from IMG_0916, IMG_2144, IMG_2489, and IMG_2823, exported as unmodified originals from Apple Photos. These run from 0.97 to 1.85 seconds, including a two-call phrase, with 25 ms fade-ins and 140–180 ms fade-outs. IMG_1298 was also reviewed; its purring was excluded from the meow selection. Each excerpt uses a separate, non-overlapping interval.
+Pages one and two open with 17 new calls and short phrases from IMG_5533, IMG_5534, and IMG_5535, exported as unmodified originals from the three supplied Photos assets. There are 11 selections from the first video and three from each of the others. Calls remain together only when the silence between them is at most 0.5 seconds; the two-call phrase in IMG_5534 has a 0.06-second gap. Speech and purring are excluded. The second page has eight buttons; its unused ninth keyboard shortcut does nothing.
 
-Page two contains the original nine Miri calls from IMG_4589, IMG_4968, IMG_5120, and IMG_5224. Their files and IDs are preserved. Labels are playful names, not interpretations of her intent.
+Page three contains nine excerpts from IMG_0916, IMG_2144, IMG_2489, and IMG_2823, exported as unmodified originals from Apple Photos. These run from 0.97 to 1.85 seconds, including a two-call phrase, with 25 ms fade-ins and 140–180 ms fade-outs. IMG_1298 was also reviewed; its purring was excluded from the meow selection. Each excerpt uses a separate, non-overlapping interval.
+
+Page four contains the original nine Miri calls from IMG_4589, IMG_4968, IMG_5120, and IMG_5224. Their files and IDs are preserved. Labels are playful names, not interpretations of her intent.
 
 Source videos belong in `source-videos/`. Exact selected intervals are in `scripts/clips.json`; times are seconds into each original. Rebuild the recordings with:
 
@@ -23,7 +25,7 @@ Source videos belong in `source-videos/`. Exact selected intervals are in `scrip
 python3 scripts/extract-audio.py
 ```
 
-To rebuild only the new recordings while preserving the originals: `python3 scripts/extract-audio.py --ids 10 11 12 13 14 15 16 17 18`.
+To rebuild only the latest recordings while preserving the existing pages: `python3 scripts/extract-audio.py --ids 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35`.
 
 Requires ffmpeg on PATH. The script selects the AAC stereo track, converts to mono MP3, removes video metadata, filters low-frequency rumble and high-frequency noise, adjusts volume, and adds short fades to avoid clicks. It never changes the originals. It generates `public/audio/manifest.json`; only the chosen clips are published.
 

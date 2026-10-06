@@ -13,7 +13,14 @@ export const sounds = [
 ].map((sound, i) => ({ ...sound, id: i + 1, src: null }));
 
 const newNames = ['Double take', 'Stairway chat', 'Little question', 'Shelf supervisor', 'Long story', 'Open the door', 'Another word', 'Doorway duet', 'Curtain call'];
+const latestNames = ['Door greeter', 'One more thing', 'Hallway hello', 'Tiny trill', 'Hear me out', 'Long reply', 'Soft aside', 'A quick word', 'Door inspector', 'Still chatting', 'Last whisper', 'Table talk', 'Little squeak', 'Rising question', 'Dinner bell', 'Tabletop trill', 'Final say'];
+const latestSounds = latestNames.map((name, i) => ({
+  ...sounds[i % sounds.length], id: i + 19, name, portrait: 10 + i % 9,
+}));
+export const pageLabels = ['FRESH MEOWS', 'MORE FRESH MEOWS', 'RECENT MEOWS', 'THE ORIGINALS'];
 export const soundPages = [
+  latestSounds.slice(0, 9),
+  latestSounds.slice(9),
   sounds.map((sound, i) => ({ ...sound, id: i + 10, name: newNames[i] })),
   sounds,
 ];

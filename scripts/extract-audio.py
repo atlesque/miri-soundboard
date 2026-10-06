@@ -33,7 +33,7 @@ for clip in clips:
     rms = math.sqrt(sum(x*x for x in samples)/len(samples))
     if peak < 1e-6:
         raise ValueError(f'Silent recording: {clip}')
-    gain_db = min(24, -20 - 20*math.log10(max(rms,1e-8)), -2 - 20*math.log10(peak))
+    gain_db = min(clip.get('maxGainDb', 24), -20 - 20*math.log10(max(rms,1e-8)), -2 - 20*math.log10(peak))
     filename = f'miri-{clip["id"]:02d}.mp3'
     fade_in = clip.get('fadeIn', 0.012)
     fade_out = clip.get('fadeOut', 0.025)

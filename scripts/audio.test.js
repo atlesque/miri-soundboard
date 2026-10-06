@@ -13,7 +13,7 @@ test('deployment cache policy revalidates every response without conflicting ove
     '  Cache-Control: public, no-cache, max-age=0, must-revalidate',
   ]);
 });
-test('both pages have recording sources before any runtime manifest request',()=>{
+test('all pages have recording sources before any runtime manifest request',()=>{
   for(const page of soundPages){
     for(const sound of page){
       assert.equal(sound.src,manifest.find(recording=>recording.id===sound.id).src);
@@ -21,12 +21,12 @@ test('both pages have recording sources before any runtime manifest request',()=
   }
 });
 test('every assigned pad has a distinct, valid, decodable recording with the selected duration',()=>{
-  assert.equal(manifest.length,18);
+  assert.equal(manifest.length,35);
   assert.deepEqual(manifest.map(x=>x.id).sort((a,b)=>a-b),allSounds.map(x=>x.id).sort((a,b)=>a-b));
   assert.equal(new Set(manifest.map(x=>x.id)).size,manifest.length);
   assert.equal(new Set(manifest.map(x=>x.src)).size,manifest.length);
   for(const recording of manifest){
-    assert.ok(recording.id>=1 && recording.id<=18);
+    assert.ok(recording.id>=1 && recording.id<=35);
     assert.match(recording.src,/^\/audio\/miri-\d{2}\.mp3$/);
     const file=new URL(`../public${recording.src}`,import.meta.url);
     assert.ok(statSync(file).size>1000);
@@ -39,11 +39,12 @@ test('every assigned pad has a distinct, valid, decodable recording with the sel
     execFileSync('ffmpeg',['-v','error','-i',file.pathname,'-f','null','-']);
   }
 });
-test('new recordings open on page one and the originals retain their IDs on page two',()=>{
-  assert.deepEqual(soundPages.map(page=>page.length),[9,9]);
-  assert.deepEqual(soundPages[0].map(sound=>sound.id),[10,11,12,13,14,15,16,17,18]);
-  assert.deepEqual(soundPages[1].map(sound=>sound.id),[1,2,3,4,5,6,7,8,9]);
-  const newClips=clips.filter(clip=>clip.id>=10);
+test('latest recordings open first and existing pages retain their IDs',()=>{
+  assert.deepEqual(soundPages.map(page=>page.length),[9,8,9,9]);
+  assert.deepEqual(soundPages[2].map(sound=>sound.id),[10,11,12,13,14,15,16,17,18]);
+  assert.deepEqual(soundPages[3].map(sound=>sound.id),[1,2,3,4,5,6,7,8,9]);
+  assert.deepEqual(soundPages.slice(0,2).flat().map(sound=>sound.id),Array.from({length:17},(_,i)=>19+i));
+  const newClips=clips.filter(clip=>clip.id>=10 && clip.id<=18);
   assert.equal(newClips.length,9);
   assert.ok(newClips.filter(clip=>clip.end-clip.start>=1.2).length>=3);
   assert.ok(newClips.every(clip=>clip.fadeOut>=.1));
@@ -54,6 +55,17 @@ test('selected intervals never reuse or overlap the same recorded call',()=>{
     for(const other of clips){
       if(clip.id===other.id || clip.source!==other.source)continue;
       assert.ok(clip.end<=other.start || other.end<=clip.start,`overlapping clips ${clip.id} and ${other.id}`);
+    }
+  }
+});
+
+test('grouped new vocalizations have no more than half a second between calls',()=>{
+  for(const clip of clips.filter(clip=>clip.id>=19)){
+    const calls=clip.vocalizations || [[clip.start,clip.end]];
+    for(let i=0;i<calls.length;i++){
+      assert.ok(calls[i][0]>=clip.start && calls[i][1]<=clip.end);
+      assert.ok(calls[i][1]>calls[i][0]);
+      if(i>0) assert.ok(calls[i][0]-calls[i-1][1]<=.5);
     }
   }
 });

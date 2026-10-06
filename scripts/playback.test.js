@@ -28,6 +28,24 @@ function setupPlayback() {
     return elements.get(selector);
   }
   const recordings = [];
+  const contexts = [];
+  class AudioContext {
+    constructor() {
+      this.destination = {};
+      this.sources = [];
+      contexts.push(this);
+    }
+    createGain() {
+      this.output = { gain: { value: 1 }, connect: destination => { this.output.destination = destination; } };
+      return this.output;
+    }
+    createMediaElementSource(audio) {
+      const source = { audio, connect: output => { source.output = output; }, disconnect: () => { source.disconnected = true; } };
+      this.sources.push(source);
+      return source;
+    }
+    resume() { this.resumed = true; return Promise.resolve(); }
+  }
   class Audio {
     constructor() {
       this.listeners = new Map();
@@ -44,11 +62,42 @@ function setupPlayback() {
     $: element,
     document: { querySelector: element, addEventListener: (type, listener) => element('document').addEventListener(type, listener) },
     active: new Map(), volume: .75, page: 0,
-    allSounds: sounds, soundPages: [sounds], status: {}, Audio,
+    allSounds: sounds, soundPages: [sounds], status: {}, Audio, window: { AudioContext },
   };
-  runInNewContext(main.slice(main.indexOf('function clear(id)')), context);
-  return { ...context, recordings, element };
+  runInNewContext(main.slice(main.indexOf('let audioContext;')), context);
+  return { ...context, recordings, contexts, element };
 }
+
+test('volume controls the shared output for current and future sounds even when media volume is ignored', async () => {
+  const app = setupPlayback();
+  const setVolume = value => app.element('#volume').emit('input', { target: { value: String(value) } });
+  assert.equal(app.contexts.length, 0);
+  setVolume(25);
+  const first = app.play(1);
+  const context = app.contexts[0];
+  assert.equal(context.resumed, true);
+  assert.equal(context.output.gain.value, .25);
+  assert.equal(context.output.destination, context.destination);
+  app.recordings[0].resolve();
+  await first;
+  const second = app.play(2);
+  app.recordings[1].resolve();
+  await second;
+  assert.equal(app.contexts.length, 1);
+  for (const source of context.sources) assert.equal(source.output, context.output);
+  for (const value of [0, 50, 100]) {
+    setVolume(value);
+    assert.equal(context.output.gain.value, value / 100);
+    assert.equal(app.element('output').value, String(value));
+  }
+  app.element('#stop').emit('click');
+  assert.ok(context.sources.every(source => source.disconnected));
+  const replay = app.play(1);
+  assert.equal(context.output.gain.value, 1);
+  assert.equal(context.sources[2].output, context.output);
+  app.recordings[2].resolve();
+  await replay;
+});
 
 test('a playing sound cannot restart through clicks or keyboard shortcuts, including while loading', async () => {
   const app = setupPlayback();

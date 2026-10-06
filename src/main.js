@@ -239,9 +239,25 @@ function changePage(direction) {
 }
 $('#page-previous').addEventListener('click', () => changePage(-1));
 $('#page-next').addEventListener('click', () => changePage(1));
+let audioContext;
+let outputGain;
+const audioSources = new WeakMap();
+function connectAudio(audio) {
+  // Create/resume the context in the pad's user gesture, including on iOS.
+  if (!audioContext) {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    outputGain = audioContext.createGain();
+    outputGain.gain.value = volume;
+    outputGain.connect(audioContext.destination);
+  }
+  const source = audioContext.createMediaElementSource(audio);
+  source.connect(outputGain);
+  audioSources.set(audio, source);
+  return audioContext.resume();
+}
 function clear(id) {
   const audio = active.get(id);
-  if (audio) { audio.pause(); audio.currentTime=0; active.delete(id); }
+  if (audio) { audio.pause(); audio.currentTime=0; audioSources.get(audio)?.disconnect(); audioSources.delete(audio); active.delete(id); }
   const button=document.querySelector(`[data-id="${id}"]`); if (button) { button.disabled=false; button.classList.remove('playing'); button.setAttribute('aria-disabled','false'); button.setAttribute('aria-pressed','false'); }
   $('.power').classList.toggle('sounding',active.size>0);
 }
@@ -250,15 +266,15 @@ async function play(id) {
   if (active.has(id)) return;
   const sound=allSounds.find(s=>s.id===id);
   if (!sound.src) {status.textContent='This button is waiting for Miri’s recording.';return;}
-  const audio=new Audio(sound.src); audio.volume=volume; active.set(id,audio);
+  const audio=new Audio(sound.src); active.set(id,audio);
   const button=document.querySelector(`[data-id="${id}"]`); button.disabled=true; button.classList.add('playing'); button.setAttribute('aria-disabled','true'); button.setAttribute('aria-pressed','true'); $('.power').classList.add('sounding');
   audio.addEventListener('ended',()=>{ if(active.get(id)===audio) clear(id);});
-  try { await audio.play(); if(active.get(id)===audio) status.textContent=`Miri says: ${sound.name.toLowerCase()}.`; }
+  try { const ready=connectAudio(audio); await Promise.all([ready, audio.play()]); if(active.get(id)===audio) status.textContent=`Miri says: ${sound.name.toLowerCase()}.`; }
   catch {if(active.get(id)===audio) {clear(id); status.textContent='Couldn’t play this recording. Try again.';}}
 }
 $('.pads').addEventListener('click',event=>{const button=event.target.closest('.pad');if(button)play(Number(button.dataset.id));});
 $('#stop').addEventListener('click',stopAll);
-$('#volume').addEventListener('input',event=>{volume=Number(event.target.value)/100;$('output').value=event.target.value;active.forEach(audio=>audio.volume=volume);});
+$('#volume').addEventListener('input',event=>{volume=Number(event.target.value)/100;$('output').value=event.target.value;if(outputGain)outputGain.gain.value=volume;});
 document.addEventListener('keydown',event=>{
   if(event.key==='Escape')stopAll();
   if(event.repeat||event.ctrlKey||event.metaKey||event.altKey||['INPUT','TEXTAREA','SELECT'].includes(event.target.tagName))return;

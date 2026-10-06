@@ -1,3 +1,5 @@
+import recordings from '../public/audio/manifest.json' with { type: 'json' };
+
 export const sounds = [
   { name: 'Hello, human', color: '#ff9138', lightColor: '#de6515' },
   { name: 'Feed me', color: '#ffdb24', lightColor: '#b78400' },
@@ -16,3 +18,12 @@ export const soundPages = [
   sounds,
 ];
 export const allSounds = soundPages.flat();
+
+// Keep the recording list in the same versioned build as the pad definitions.
+// A separately cached manifest can otherwise omit newly added pages.
+for (const recording of recordings) {
+  const sound = allSounds.find(sound => sound.id === recording.id);
+  if (sound && /^\/audio\/[a-zA-Z0-9._-]+\.(mp3|wav|m4a|ogg)$/.test(recording.src)) {
+    sound.src = recording.src;
+  }
+}

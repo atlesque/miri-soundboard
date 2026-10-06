@@ -5,6 +5,21 @@ import { execFileSync } from 'node:child_process';
 import { allSounds, soundPages } from '../src/sounds.js';
 const manifest = JSON.parse(readFileSync(new URL('../public/audio/manifest.json',import.meta.url)));
 const clips = JSON.parse(readFileSync(new URL('./clips.json',import.meta.url)));
+test('deployment cache policy revalidates every response without conflicting overrides',()=>{
+  const headers=readFileSync(new URL('../public/_headers',import.meta.url),'utf8');
+  const rules=headers.split('\n').filter(line=>line.trim() && !line.startsWith(' ') && !line.startsWith('#'));
+  assert.deepEqual(rules,['/*']);
+  assert.deepEqual(headers.match(/^\s+Cache-Control:.*$/gm),[
+    '  Cache-Control: public, no-cache, max-age=0, must-revalidate',
+  ]);
+});
+test('both pages have recording sources before any runtime manifest request',()=>{
+  for(const page of soundPages){
+    for(const sound of page){
+      assert.equal(sound.src,manifest.find(recording=>recording.id===sound.id).src);
+    }
+  }
+});
 test('every assigned pad has a distinct, valid, decodable recording with the selected duration',()=>{
   assert.equal(manifest.length,18);
   assert.deepEqual(manifest.map(x=>x.id).sort((a,b)=>a-b),allSounds.map(x=>x.id).sort((a,b)=>a-b));

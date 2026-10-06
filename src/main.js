@@ -260,13 +260,4 @@ document.addEventListener('keydown',event=>{
   if(event.repeat||event.ctrlKey||event.metaKey||event.altKey||['INPUT','TEXTAREA','SELECT'].includes(event.target.tagName))return;
   if(/^[1-9]$/.test(event.key)){event.preventDefault();play(soundPages[page][Number(event.key) - 1].id);}
 });
-try {
-  const response=await fetch('/audio/manifest.json');
-  if(!response.ok)throw new Error('Manifest unavailable');
-  const recordings=await response.json();
-  for(const recording of recordings){const sound=allSounds.find(s=>s.id===recording.id);if(sound && /^\/audio\/[a-zA-Z0-9._-]+\.(mp3|wav|m4a|ogg)$/.test(recording.src)){
-    sound.src=recording.src;
-  }}
-  renderPads();
-  if(allSounds.some(s=>s.src))status.textContent='Your move, human.';
-} catch {status.textContent='Recordings are unavailable. Please refresh to try again.';}
+if(allSounds.some(s=>s.src))status.textContent='Your move, human.';

@@ -43,7 +43,7 @@ The GitHub repository [atlesque/miri-soundboard](https://github.com/atlesque/mir
 - Production branch: `main`
 - Node.js: 24 (selected by `.node-version`)
 
-The `public/_headers` file is copied to `dist/` and applies security and audio caching headers on Pages.
+The `public/_headers` file is copied to `dist/` and applies security headers and mandatory cache revalidation to every response on Pages. On each visit or regular refresh, the browser checks the current deployment before reusing HTML, audio, or other cached files; unchanged files can still use an ETag/304 response. The recording manifest is bundled into the app's content-hashed JavaScript build, so each deployment's interface and recording list update together, even if a visitor previously cached an older `audio/manifest.json`. These settings ship with every deployment and require no manual cache purge or hard refresh.
 
 The custom domain is associated with the Pages project. Cloudflare manages the CNAME `miri` → `miri-soundboard.pages.dev` in the `atlesque.dev` zone and provisions HTTPS automatically.
 

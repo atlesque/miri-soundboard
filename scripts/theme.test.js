@@ -95,3 +95,33 @@ test('taps continue to select individual appearance buttons', () => {
   buttons[2].emit('click');
   assert.equal(toggle.dataset.position, 'dark');
 });
+
+test('a touch click with zero detail cannot undo a completed swipe', () => {
+  const { toggle, buttons, window } = setupTheme();
+  toggle.emit('pointerdown', { target: buttons[0], clientX: 18, pointerType: 'touch' });
+  toggle.emit('pointermove', { clientX: 90 });
+  window.emit('pointerup', { clientX: 90 });
+  let suppressed = false;
+  toggle.emit('click', {
+    target: buttons[0], detail: 0, pointerType: 'touch',
+    preventDefault() {}, stopImmediatePropagation() { suppressed = true; },
+  });
+  if (!suppressed) buttons[0].emit('click');
+  assert.equal(toggle.dataset.position, 'dark');
+  assert.equal(suppressed, true);
+});
+
+test('keyboard clicks still work when a swipe did not generate a click', () => {
+  const { toggle, buttons, window } = setupTheme();
+  toggle.emit('pointerdown', { clientX: 18 });
+  toggle.emit('pointermove', { clientX: 90 });
+  window.emit('pointerup', { clientX: 90 });
+  let suppressed = false;
+  toggle.emit('click', {
+    target: buttons[1], detail: 0, pointerType: '',
+    preventDefault() {}, stopImmediatePropagation() { suppressed = true; },
+  });
+  assert.equal(suppressed, false);
+  buttons[1].emit('click');
+  assert.equal(toggle.dataset.position, 'system');
+});

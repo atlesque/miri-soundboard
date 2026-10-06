@@ -30,7 +30,7 @@ function selectTheme(value) {
 themeButtons.forEach(button => button.addEventListener('click', () => selectTheme(button.dataset.theme)));
 // A drag also generates a click; don't let it select the button where it began.
 themeSwitch.addEventListener('click', event => {
-  if (suppressThemeClick && event.detail > 0) {
+  if (suppressThemeClick && (event.detail > 0 || event.pointerType)) {
     event.preventDefault();
     event.stopImmediatePropagation();
     suppressThemeClick = false;

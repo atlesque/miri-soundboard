@@ -80,7 +80,11 @@ function finishThemeDrag(event) {
 }
 window.addEventListener('pointerup', finishThemeDrag);
 window.addEventListener('pointercancel', finishThemeDrag);
-themeSwitch.addEventListener('lostpointercapture', finishThemeDrag);
+themeSwitch.addEventListener('lostpointercapture', event => {
+  // Touch starts with implicit capture on the button. Its capture-loss event
+  // bubbles here when the drag transfers capture to the switch.
+  if (event.target === themeSwitch) finishThemeDrag(event);
+});
 systemTheme.addEventListener('change', applyTheme);
 applyTheme();
 // Shared portrait: Miri's warm brown tabby coat, tall ears, round eyes and cream muzzle.

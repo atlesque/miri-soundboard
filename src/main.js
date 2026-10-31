@@ -2,6 +2,7 @@ import '@fontsource-variable/dm-sans';
 import '@fontsource-variable/manrope';
 import './style.css';
 import { allSounds, soundPages, pageLabels } from './sounds.js';
+import { loadFavorites, saveFavorites, loadFavoritesOnly, saveFavoritesOnly, favoritePages } from './favorites.js';
 const $ = (selector) => document.querySelector(selector);
 const status = $('#status');
 const active = new Map();
@@ -223,22 +224,75 @@ function pixelCat(expression) {
   }
   return `<svg viewBox="0 0 32 32" class="pixel-cat" aria-hidden="true" shape-rendering="crispEdges">${[...pixels].map(([xy,c])=>{const [x,y]=xy.split(',');return `<rect x="${x}" y="${y}" width="1" height="1" fill="${palette[c]}"/>`;}).join('')}</svg>`;
 }
+let storage;
+try { storage = localStorage; } catch {}
+const favorites = loadFavorites(storage);
+let favoritesOnly = loadFavoritesOnly(storage);
+let boardPage = 0;
+let pages = soundPages;
+const starIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.8 2.8 5.7 6.3.9-4.6 4.4 1.1 6.2L12 17l-5.6 3 1.1-6.2-4.6-4.4 6.3-.9L12 2.8Z"/></svg>';
+const pageLabel = () => favoritesOnly ? 'FAVORITES' : pageLabels[page];
 function renderPads() {
-  $('.pads').innerHTML = soundPages[page].map((s, i) => `<button class="pad" style="--pad-color:${s.color};--cat-light:${s.lightColor}" data-id="${s.id}" aria-label="${i + 1}. ${s.name}" aria-disabled="${!s.src}" aria-pressed="false"><span class="pad-face"><span class="led-screen">${pixelCat(s.portrait ?? s.id)}</span><span class="pad-caption"><span>${s.name}</span><kbd>${i + 1}</kbd></span></span></button>`).join('');
-  $('.pads').setAttribute('aria-label', `Page ${page + 1} sound buttons`);
-  $('.page-lcd').textContent = `0${page + 1} / 0${soundPages.length}`;
-  $('#page-label').textContent = pageLabels[page];
-  $('.page-lcd').setAttribute('aria-label', `Page ${page + 1} of ${soundPages.length}`);
+  pages = favoritesOnly ? favoritePages(allSounds, favorites) : soundPages;
+  page = Math.min(page, pages.length - 1);
+  const shown = pages[page];
+  const pads = $('.pads');
+  pads.classList.toggle('empty', !shown.length);
+  pads.innerHTML = shown.length ? shown.map((s, i) => {
+    // Re-rendering after a favorite change must not reset a sound that is still playing.
+    const playing = active.has(s.id);
+    const favorite = favorites.has(s.id);
+    return `<div class="pad-cell"><button class="pad${playing ? ' playing' : ''}" style="--pad-color:${s.color};--cat-light:${s.lightColor}" data-id="${s.id}" aria-label="${i + 1}. ${s.name}" aria-disabled="${!s.src || playing}" aria-pressed="${playing}"${playing ? ' disabled' : ''}><span class="pad-face"><span class="led-screen">${pixelCat(s.portrait ?? s.id)}</span><span class="pad-caption"><span>${s.name}</span><kbd>${i + 1}</kbd></span></span></button><button class="favorite" data-favorite="${s.id}" aria-pressed="${favorite}" aria-label="Favorite: ${s.name}" title="${favorite ? 'Remove from favorites' : 'Add to favorites'}">${starIcon}</button></div>`;
+  }).join('') : '<p class="pads-empty">No favorites yet.<span>Tap the star on any pad to keep it here.</span></p>';
+  pads.setAttribute('aria-label', favoritesOnly ? `Favorites page ${page + 1} sound buttons` : `Page ${page + 1} sound buttons`);
+  const lcd = $('.page-lcd');
+  lcd.textContent = shown.length ? `${String(page + 1).padStart(2, '0')} / ${String(pages.length).padStart(2, '0')}` : '00 / 00';
+  lcd.setAttribute('aria-label', shown.length ? `Page ${page + 1} of ${pages.length}` : 'No favorite pages');
+  $('#page-label').textContent = pageLabel();
+  const filter = $('#favorites-filter');
+  filter.setAttribute('aria-pressed', String(favoritesOnly));
+  filter.title = favoritesOnly ? 'Show all sounds' : 'Show only favorites';
 }
 renderPads();
 function changePage(direction) {
   stopAll();
-  page = (page + direction + soundPages.length) % soundPages.length;
+  page = (page + direction + pages.length) % pages.length;
   renderPads();
-  status.textContent = `Page ${page + 1}: ${pageLabels[page].toLowerCase()}. Keys 1 to 9 play this page.`;
+  status.textContent = `Page ${page + 1}: ${pageLabel().toLowerCase()}. Keys 1 to 9 play this page.`;
 }
 $('#page-previous').addEventListener('click', () => changePage(-1));
 $('#page-next').addEventListener('click', () => changePage(1));
+function toggleFavorite(id) {
+  const sound = allSounds.find(s => s.id === id);
+  if (!sound) return;
+  const index = [...document.querySelectorAll('.favorite')].findIndex(button => button.dataset.favorite === String(id));
+  const hadFocus = document.activeElement?.dataset?.favorite === String(id);
+  const added = !favorites.has(id);
+  if (added) favorites.add(id); else favorites.delete(id);
+  saveFavorites(storage, favorites);
+  renderPads();
+  if (hadFocus) {
+    // In the favorites view the pad disappears, so keep focus on a neighbouring star.
+    const stars = [...document.querySelectorAll('.favorite')];
+    (stars.find(button => button.dataset.favorite === String(id)) ?? stars[Math.min(index, stars.length - 1)] ?? $('#favorites-filter')).focus({ preventScroll: true });
+  }
+  status.textContent = added ? `${sound.name} added to favorites.` : `${sound.name} removed from favorites.`;
+}
+$('.pads').addEventListener('click', event => {
+  const button = event.target.closest('.favorite');
+  if (button) toggleFavorite(Number(button.dataset.favorite));
+});
+$('#favorites-filter').addEventListener('click', () => {
+  stopAll();
+  favoritesOnly = !favoritesOnly;
+  saveFavoritesOnly(storage, favoritesOnly);
+  // Return to the board page you left when switching favorites off again.
+  if (favoritesOnly) { boardPage = page; page = 0; } else page = boardPage;
+  renderPads();
+  status.textContent = favoritesOnly
+    ? (favorites.size ? `Showing ${favorites.size} favorite${favorites.size === 1 ? '' : 's'}.` : 'No favorites yet. Tap a star to add one.')
+    : `Showing all sounds. Page ${page + 1}: ${pageLabel().toLowerCase()}.`;
+});
 let audioContext;
 let outputGain;
 const audioSources = new WeakMap();
@@ -278,6 +332,6 @@ $('#volume').addEventListener('input',event=>{volume=Number(event.target.value)/
 document.addEventListener('keydown',event=>{
   if(event.key==='Escape')stopAll();
   if(event.repeat||event.ctrlKey||event.metaKey||event.altKey||['INPUT','TEXTAREA','SELECT'].includes(event.target.tagName))return;
-  if(/^[1-9]$/.test(event.key)){event.preventDefault();const sound = soundPages[page][Number(event.key) - 1]; if (sound) play(sound.id);}
+  if(/^[1-9]$/.test(event.key)){event.preventDefault();const sound = pages[page][Number(event.key) - 1]; if (sound) play(sound.id);}
 });
 if(allSounds.some(s=>s.src))status.textContent='Your move, human.';

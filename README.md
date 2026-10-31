@@ -2,6 +2,8 @@
 
 A static, responsive 3 × 3 soundboard for Miri, with four pages of recordings. The device has sculpted buttons, recessed LED pixel cats, a tiny LCD page display with rubber arrow buttons, light/dark/system appearance, keyboard shortcuts (1–9 for the displayed page and Escape to stop), a stop button, and volume control. The arrows cycle through pages in either direction; the display is not clickable. Changing pages stops any playing sounds.
 
+Tap the star in a pad's corner to favorite it. The star button beside the page arrows switches the board to your favorites only, in board order and nine per page, and switching back returns to the page you left. Favorites and the filter are remembered in this browser's localStorage (`miri-favorites`, `miri-favorites-only`); there is no account or sync.
+
 ## Run locally
 
 ```sh

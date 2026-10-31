@@ -63,7 +63,7 @@ function setupPlayback(overrides = {}) {
     $: element,
     document: { querySelector: element, addEventListener: (type, listener) => element('document').addEventListener(type, listener) },
     active: new Map(), volume: .75, page: 0,
-    allSounds: sounds, soundPages: [sounds], status: {}, Audio, window: { AudioContext },
+    allSounds: sounds, soundPages: [sounds], pages: [sounds], status: {}, Audio, window: { AudioContext },
     preloader: { ready: new Set([1, 2].map(id => `/${['one', 'two'][id - 1]}.mp3`)), isReady(src) { return this.ready.has(src); }, urlFor: src => `blob:${src}` },
     ...overrides,
   };

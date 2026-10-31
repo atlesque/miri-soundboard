@@ -2,6 +2,7 @@ import '@fontsource-variable/dm-sans';
 import '@fontsource-variable/manrope';
 import './style.css';
 import { allSounds, soundPages, pageLabels } from './sounds.js';
+import { createPreloader } from './preload.js';
 const $ = (selector) => document.querySelector(selector);
 const status = $('#status');
 const active = new Map();
@@ -223,18 +224,39 @@ function pixelCat(expression) {
   }
   return `<svg viewBox="0 0 32 32" class="pixel-cat" aria-hidden="true" shape-rendering="crispEdges">${[...pixels].map(([xy,c])=>{const [x,y]=xy.split(',');return `<rect x="${x}" y="${y}" width="1" height="1" fill="${palette[c]}"/>`;}).join('')}</svg>`;
 }
+function setPadLoading(button, loading) {
+  button.disabled = loading;
+  button.classList.toggle('loading', loading);
+  button.setAttribute('aria-busy', String(loading));
+  button.setAttribute('aria-disabled', String(loading || !allSounds.find(s => s.id === Number(button.dataset.id))?.src));
+}
+const preloader = createPreloader({
+  fetch: (...args) => fetch(...args),
+  createObjectURL: blob => URL.createObjectURL(blob),
+  onReady: src => soundPages[page].forEach(s => {
+    const button = s.src === src && document.querySelector(`[data-id="${s.id}"]`);
+    if (button && !active.has(s.id)) setPadLoading(button, false);
+  }),
+});
+let preloadStarted = false;
+// Only the visible page is fetched, and only after the interface itself has loaded.
+function preloadPage() { if (preloadStarted) preloader.loadAll(soundPages[page].map(s => s.src)); }
 function renderPads() {
-  $('.pads').innerHTML = soundPages[page].map((s, i) => `<button class="pad" style="--pad-color:${s.color};--cat-light:${s.lightColor}" data-id="${s.id}" aria-label="${i + 1}. ${s.name}" aria-disabled="${!s.src}" aria-pressed="false"><span class="pad-face"><span class="led-screen">${pixelCat(s.portrait ?? s.id)}</span><span class="pad-caption"><span>${s.name}</span><kbd>${i + 1}</kbd></span></span></button>`).join('');
+  $('.pads').innerHTML = soundPages[page].map((s, i) => { const loading = !preloader.isReady(s.src); return `<button class="pad${loading ? ' loading' : ''}" style="--pad-color:${s.color};--cat-light:${s.lightColor}" data-id="${s.id}" aria-label="${i + 1}. ${s.name}" aria-disabled="${loading || !s.src}" aria-busy="${loading}" aria-pressed="false"${loading ? ' disabled' : ''}><span class="pad-face"><span class="led-screen">${pixelCat(s.portrait ?? s.id)}</span><span class="pad-caption"><span>${s.name}</span><kbd>${i + 1}</kbd></span></span></button>`; }).join('');
   $('.pads').setAttribute('aria-label', `Page ${page + 1} sound buttons`);
   $('.page-lcd').textContent = `0${page + 1} / 0${soundPages.length}`;
   $('#page-label').textContent = pageLabels[page];
   $('.page-lcd').setAttribute('aria-label', `Page ${page + 1} of ${soundPages.length}`);
 }
 renderPads();
+function startPreloading() { preloadStarted = true; preloadPage(); }
+if (document.readyState === 'complete') startPreloading();
+else window.addEventListener('load', startPreloading, { once: true });
 function changePage(direction) {
   stopAll();
   page = (page + direction + soundPages.length) % soundPages.length;
   renderPads();
+  preloadPage();
   status.textContent = `Page ${page + 1}: ${pageLabels[page].toLowerCase()}. Keys 1 to 9 play this page.`;
 }
 $('#page-previous').addEventListener('click', () => changePage(-1));
@@ -266,7 +288,8 @@ async function play(id) {
   if (active.has(id)) return;
   const sound=allSounds.find(s=>s.id===id);
   if (!sound.src) {status.textContent='This button is waiting for Miri’s recording.';return;}
-  const audio=new Audio(sound.src); active.set(id,audio);
+  if (!preloader.isReady(sound.src)) {status.textContent=`${sound.name} is still loading.`;return;}
+  const audio=new Audio(preloader.urlFor(sound.src)); active.set(id,audio);
   const button=document.querySelector(`[data-id="${id}"]`); button.disabled=true; button.classList.add('playing'); button.setAttribute('aria-disabled','true'); button.setAttribute('aria-pressed','true'); $('.power').classList.add('sounding');
   audio.addEventListener('ended',()=>{ if(active.get(id)===audio) clear(id);});
   try { const ready=connectAudio(audio); await Promise.all([ready, audio.play()]); if(active.get(id)===audio) status.textContent=`Miri says: ${sound.name.toLowerCase()}.`; }

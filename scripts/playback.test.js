@@ -5,7 +5,7 @@ import { runInNewContext } from 'node:vm';
 
 const main = readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
 
-function setupPlayback() {
+function setupPlayback(overrides = {}) {
   const elements = new Map();
   function element(selector) {
     if (!elements.has(selector)) {
@@ -47,7 +47,8 @@ function setupPlayback() {
     resume() { this.resumed = true; return Promise.resolve(); }
   }
   class Audio {
-    constructor() {
+    constructor(src) {
+      this.src = src;
       this.listeners = new Map();
       this.currentTime = 0;
       recordings.push(this);
@@ -63,6 +64,8 @@ function setupPlayback() {
     document: { querySelector: element, addEventListener: (type, listener) => element('document').addEventListener(type, listener) },
     active: new Map(), volume: .75, page: 0,
     allSounds: sounds, soundPages: [sounds], status: {}, Audio, window: { AudioContext },
+    preloader: { ready: new Set([1, 2].map(id => `/${['one', 'two'][id - 1]}.mp3`)), isReady(src) { return this.ready.has(src); }, urlFor: src => `blob:${src}` },
+    ...overrides,
   };
   runInNewContext(main.slice(main.indexOf('let audioContext;')), context);
   return { ...context, recordings, contexts, element };
@@ -153,4 +156,17 @@ test('failed playback unlocks the button, and a stopped recording cannot unlock 
   assert.equal(app.active.get(1), app.recordings[2]);
   app.recordings[2].resolve();
   await replay;
+});
+
+test('a pad still loading cannot play, and a loaded pad plays from the preloaded copy', async () => {
+  const app = setupPlayback();
+  app.preloader.ready.delete('/two.mp3');
+  await app.play(2);
+  app.element('document').emit('keydown', { key: '2', target: { tagName: 'BODY' }, preventDefault() {} });
+  assert.equal(app.recordings.length, 0);
+  assert.match(app.status.textContent, /still loading/);
+  const pending = app.play(1);
+  assert.equal(app.recordings[0].src, 'blob:/one.mp3');
+  app.recordings[0].resolve();
+  await pending;
 });

@@ -2,6 +2,7 @@ import '@fontsource-variable/dm-sans';
 import '@fontsource-variable/manrope';
 import './style.css';
 import { allSounds, soundPages, pageLabels } from './sounds.js';
+import { createPreloader } from './preload.js';
 import { loadFavorites, saveFavorites, loadFavoritesOnly, saveFavoritesOnly, favoritePages } from './favorites.js';
 const $ = (selector) => document.querySelector(selector);
 const status = $('#status');
@@ -224,6 +225,23 @@ function pixelCat(expression) {
   }
   return `<svg viewBox="0 0 32 32" class="pixel-cat" aria-hidden="true" shape-rendering="crispEdges">${[...pixels].map(([xy,c])=>{const [x,y]=xy.split(',');return `<rect x="${x}" y="${y}" width="1" height="1" fill="${palette[c]}"/>`;}).join('')}</svg>`;
 }
+function setPadLoading(button, loading) {
+  button.disabled = loading;
+  button.classList.toggle('loading', loading);
+  button.setAttribute('aria-busy', String(loading));
+  button.setAttribute('aria-disabled', String(loading || !allSounds.find(s => s.id === Number(button.dataset.id))?.src));
+}
+const preloader = createPreloader({
+  fetch: (...args) => fetch(...args),
+  createObjectURL: blob => URL.createObjectURL(blob),
+  onReady: src => pages[page].forEach(s => {
+    const button = s.src === src && document.querySelector(`[data-id="${s.id}"]`);
+    if (button && !active.has(s.id)) setPadLoading(button, false);
+  }),
+});
+let preloadStarted = false;
+// Only the visible page is fetched, and only after the interface itself has loaded.
+function preloadPage() { if (preloadStarted) preloader.loadAll(pages[page].map(s => s.src)); }
 let storage;
 try { storage = localStorage; } catch {}
 const favorites = loadFavorites(storage);
@@ -242,7 +260,8 @@ function renderPads() {
     // Re-rendering after a favorite change must not reset a sound that is still playing.
     const playing = active.has(s.id);
     const favorite = favorites.has(s.id);
-    return `<div class="pad-cell"><button class="pad${playing ? ' playing' : ''}" style="--pad-color:${s.color};--cat-light:${s.lightColor}" data-id="${s.id}" aria-label="${i + 1}. ${s.name}" aria-disabled="${!s.src || playing}" aria-pressed="${playing}"${playing ? ' disabled' : ''}><span class="pad-face"><span class="led-screen">${pixelCat(s.portrait ?? s.id)}</span><span class="pad-caption"><span>${s.name}</span><kbd>${i + 1}</kbd></span></span></button><button class="favorite" data-favorite="${s.id}" aria-pressed="${favorite}" aria-label="Favorite: ${s.name}" title="${favorite ? 'Remove from favorites' : 'Add to favorites'}">${starIcon}</button></div>`;
+    const loading = !playing && !preloader.isReady(s.src);
+    return `<div class="pad-cell"><button class="pad${playing ? ' playing' : ''}${loading ? ' loading' : ''}" style="--pad-color:${s.color};--cat-light:${s.lightColor}" data-id="${s.id}" aria-label="${i + 1}. ${s.name}" aria-disabled="${!s.src || playing || loading}" aria-busy="${loading}" aria-pressed="${playing}"${playing || loading ? ' disabled' : ''}><span class="pad-face"><span class="led-screen">${pixelCat(s.portrait ?? s.id)}</span><span class="pad-caption"><span>${s.name}</span><kbd>${i + 1}</kbd></span></span></button><button class="favorite" data-favorite="${s.id}" aria-pressed="${favorite}" aria-label="Favorite: ${s.name}" title="${favorite ? 'Remove from favorites' : 'Add to favorites'}">${starIcon}</button></div>`;
   }).join('') : '<p class="pads-empty">No favorites yet.<span>Tap the star on any pad to keep it here.</span></p>';
   pads.setAttribute('aria-label', favoritesOnly ? `Favorites page ${page + 1} sound buttons` : `Page ${page + 1} sound buttons`);
   const lcd = $('.page-lcd');
@@ -252,8 +271,12 @@ function renderPads() {
   const filter = $('#favorites-filter');
   filter.setAttribute('aria-pressed', String(favoritesOnly));
   filter.title = favoritesOnly ? 'Show all sounds' : 'Show only favorites';
+  preloadPage();
 }
 renderPads();
+function startPreloading() { preloadStarted = true; preloadPage(); }
+if (document.readyState === 'complete') startPreloading();
+else window.addEventListener('load', startPreloading, { once: true });
 function changePage(direction) {
   stopAll();
   page = (page + direction + pages.length) % pages.length;
@@ -320,7 +343,8 @@ async function play(id) {
   if (active.has(id)) return;
   const sound=allSounds.find(s=>s.id===id);
   if (!sound.src) {status.textContent='This button is waiting for Miri’s recording.';return;}
-  const audio=new Audio(sound.src); active.set(id,audio);
+  if (!preloader.isReady(sound.src)) {status.textContent=`${sound.name} is still loading.`;return;}
+  const audio=new Audio(preloader.urlFor(sound.src)); active.set(id,audio);
   const button=document.querySelector(`[data-id="${id}"]`); button.disabled=true; button.classList.add('playing'); button.setAttribute('aria-disabled','true'); button.setAttribute('aria-pressed','true'); $('.power').classList.add('sounding');
   audio.addEventListener('ended',()=>{ if(active.get(id)===audio) clear(id);});
   try { const ready=connectAudio(audio); await Promise.all([ready, audio.play()]); if(active.get(id)===audio) status.textContent=`Miri says: ${sound.name.toLowerCase()}.`; }
